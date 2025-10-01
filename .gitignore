@@ -10,3 +10,5 @@ obj/
 *.cache
 *.pdb
 *.tmp
+*.mdf
+*.ldf
