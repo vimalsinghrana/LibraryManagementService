@@ -1,6 +1,7 @@
 ﻿using LibraryManagementService.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -14,61 +15,109 @@ namespace LibraryManagementService.Controllers
 
 		public BookController()
 		{
-			//_service = new VimLibraryService();
 			_service = new LibraryService();
 		}
-		public IEnumerable<IssueRecord> Get()
+
+		[HttpGet]
+		public IHttpActionResult Get()
 		{
-			return (IEnumerable<IssueRecord>)_service.GetIssuedBooks(1);
-			
-			//return new string[] { "value1", "value2" };
+			try
+			{
+				var issuedBooks = _service.GetIssuedBooks(1);
+				return Ok(issuedBooks);
+			}
+			catch (Exception ex)
+			{
+				return InternalServerError(ex);
+			}
 		}
-		
+
+		/// <summary>
+		/// Issues a book to a member.
+		/// </summary>
 		[HttpPost]
 		[Route("api/Book/IssueBook")]
 		[ActionName("IssueBook")]
-		public Book IssueBook(int memberId, int bookId)
+		public IHttpActionResult IssueBook(int memberId, int bookId)
 		{
-			return _service.IssueBook(memberId, bookId) ;
+			try
+			{
+				_service.IssueBook(memberId, bookId);
+				return Ok("Book issued successfully.");
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ex.Message);
+			}
 		}
 
-
-	    [Route("api/book/GetAllBooks")]
+		[Route("api/book/GetAllBooks")]
 		[ActionName("GetAllBooks")]
 		[HttpGet]
-		public IEnumerable<Book> GetAllBooks()
+		public IHttpActionResult GetAllBooks()
 		{
-			return _service.GetAllBooks();
+			try
+			{
+				var books = _service.GetAllBooks();
+				return Ok(books);
+			}
+			catch (Exception ex)
+			{
+				return InternalServerError(ex);
+			}
 		}
 
 		[Route("api/book/GetIssuedBooks")]
 		[ActionName("GetIssuedBooks")]
 		[HttpGet]
-		public IEnumerable<IssueRecord> Get(int memberId)
+		public IHttpActionResult GetIssuedBooks(int memberId)
 		{
-			return _service.GetIssuedBooks(memberId);
+			try
+			{
+				var issuedBooks = _service.GetIssuedBooks(memberId);
+				return Ok(issuedBooks);
+			}
+			catch (Exception ex)
+			{
+				return InternalServerError(ex);
+			}
 		}
 
 		[Route("api/book/ReturnBook")]
 		[ActionName("ReturnBook")]
 		[HttpPost]
-		public void POST(int memberId, int bookId)
+		public IHttpActionResult ReturnBook(int memberId, int bookId)
 		{
-			 _service.ReturnBook(memberId, bookId) ;
+			try
+			{
+				_service.ReturnBook(memberId, bookId);
+				return Ok("Book returned successfully.");
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ex.Message);
+			}
 		}
 
-		// POST api/values
+		// POST api/book
 		[HttpPost]
 		public IHttpActionResult Post([FromBody] Book book)
 		{
 			if (book == null)
 				return BadRequest("Book data is required.");
 
-			var result = _service.AddBook(book);
-			if (result)
-				return CreatedAtRoute("DefaultApi", new { id = book.Id }, book);
+			try
+			{
+				var result = _service.AddBook(book);
+				if (result)
+					return CreatedAtRoute("DefaultApi", new { id = book.Id }, book);
 
-			return BadRequest("Failed to add book.");
+				return BadRequest("Failed to add book.");
+			}
+			catch (Exception ex)
+			{
+				return InternalServerError(ex);
+			}
 		}
 
 		// PUT api/book/5
@@ -78,33 +127,56 @@ namespace LibraryManagementService.Controllers
 			if (updatedBook == null)
 				return BadRequest("Book data is required.");
 
-			var context = new LibraryContext();
-			var book = context.Books.Find(id);
-			if (book == null)
-				return NotFound();
+			try
+			{
+				var context = new LibraryContext();
+				var book = context.Books.Find(id);
+				if (book == null)
+					return NotFound();
 
-			book.Title = updatedBook.Title;
-			book.Author = updatedBook.Author;
-			book.PublishedYear = updatedBook.PublishedYear;
-			book.AvailableCopies = updatedBook.AvailableCopies;
+				book.Title = updatedBook.Title;
+				book.Author = updatedBook.Author;
+				book.PublishedYear = updatedBook.PublishedYear;
+				book.AvailableCopies = updatedBook.AvailableCopies;
 
-			context.SaveChanges();
-			return Ok(book);
+				context.SaveChanges();
+				return Ok(book);
+			}
+			catch (Exception ex)
+			{
+				return InternalServerError(ex);
+			}
 		}
 
 		// DELETE api/book/5
 		[HttpDelete]
 		public IHttpActionResult Delete(int id)
 		{
-			var context = new LibraryContext();
-			var book = context.Books.Find(id);
-			if (book == null)
-				return NotFound();
+			try
+			{
+				var context = new LibraryContext();
+				var book = context.Books.Find(id);
+				if (book == null)
+					return NotFound();
 
-			context.Books.Remove(book);
-			context.SaveChanges();
-			return StatusCode(System.Net.HttpStatusCode.NoContent);
+				context.Books.Remove(book);
+				context.SaveChanges();
+				return StatusCode(System.Net.HttpStatusCode.NoContent);
+			}
+			catch (Exception ex)
+			{
+				return InternalServerError(ex);
+			}
 		}
 	}
 
+	public class MemberDto
+	{
+		[Required]
+		public string Name { get; set; }
+
+		[Required]
+		[EmailAddress]
+		public string Email { get; set; }
+	}
 }
